@@ -17,6 +17,22 @@ import java.util.concurrent.locks.ReentrantLock;
 //TIMED_WAITING	Thread is waiting for a specified amount of time (sleep, join, wait(timeout))
 //TERMINATED	Thread has completed execution or has been stopped
 
+//interleave threads, parallelism
+
+//depends on cpu
+//concurrency
+
+
+/*t1     t3      t5      t7
+t2
+t1 ->
+t2 ->
+t1 ->
+t2 ->
+t1 ->
+t2 ->*/
+
+
 class LifecycleThread extends Thread {
     public void run() {
         System.out.println("Running...");
@@ -33,7 +49,7 @@ class LifecycleThread extends Thread {
 //Inter-Thread Communication
 class Shared {
     synchronized void printMsg() {
-            try {
+        try {
                 System.out.println("Waiting...");
                 wait();
                 System.out.println("Resumed!");
@@ -50,10 +66,14 @@ class Shared {
 class WaitNotifyExample {
     public static void main(String[] args) {
         Shared s = new Shared();
-        Runnable runnable = () -> s.printMsg();
-        new Thread(runnable).start();
+        Runnable runnable = () -> {
+            s.printMsg();
+        };
+        Thread thread1 = new Thread(runnable);
+        thread1.start();
         try { Thread.sleep(1000); } catch (Exception e) {}
-        new Thread(() -> s.trigger()).start();
+        Thread thread2 = new Thread(() -> s.trigger());
+        thread2.start();
     }
 }
 
@@ -81,7 +101,9 @@ class DaemonPriorityDemo {
 class CallableExample {
     public static void main(String[] args) throws Exception {
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        Callable<Integer> task = () -> 123;
+        Callable<Integer> task = () -> {
+            return 123;
+        };
         Future<Integer> future = executor.submit(task);
         System.out.println("Result: " + future.get());
         executor.shutdown();
@@ -139,7 +161,7 @@ class LockExample {
 
 
 class Increment implements Runnable{
-    static int counter=0;
+    int counter=0;
 
     public int getCounter() {
         return counter;
@@ -151,7 +173,7 @@ class Increment implements Runnable{
 
     @Override
     public void run() {
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 2000; i++) {
             counter++;
         }
     }
@@ -169,13 +191,22 @@ class AtomicCounter {
         t1.join(); t2.join();
         System.out.println("Count: " + counter.get());
 
-       /* Increment increment = new Increment();
+      /*  Increment increment = new Increment();
         Thread t1 = new Thread(increment);
-        t1.start();
         Thread t2 = new Thread(increment);
+        Thread t3 = new Thread(increment);
+        Thread t4 = new Thread(increment);
+        Thread t5 = new Thread(increment);
+        t1.start();
         t2.start();
+        t3.start();
+        t4.start();
+        t5.start();
         t1.join();
         t2.join();
+        t3.join();
+        t4.join();
+        t5.join();
         System.out.println(increment.getCounter());*/
     }
 }
